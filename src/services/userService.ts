@@ -49,11 +49,11 @@ export const updateStaffStatus = async (staffId: string, isActive: boolean) => {
       });
     
       if (!userToUpdate) {
-        throw new Error(\'Staff not found\');
+        throw new Error('Staff not found');
       }
     
-      if (userToUpdate.role === \'ADMIN\') {
-        throw new Error(\'Cannot disable an admin account\');
+      if (userToUpdate.role === 'ADMIN') {
+        throw new Error('Cannot disable an admin account');
       }
   const updatedStaff = await prisma.user.update({
     where: {
