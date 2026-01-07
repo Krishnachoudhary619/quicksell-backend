@@ -1,650 +1,331 @@
-
 # API Documentation
 
-This document provides detailed information about all the APIs in the application.
+This documentation provides a comprehensive guide to the backend API, designed for frontend developers. It outlines all the necessary information to interact with the API effectively, including authentication, authorization, error handling, and detailed endpoint descriptions.
 
-## Table of Contents
+## Global Sections
 
-- [Health](#health)
-- [Catalog](#catalog)
-- [Order](#order)
-- [Product](#product)
-- [Shop](#shop)
-- [User](#user)
+### 1. Authentication
 
----
+Authentication is handled via JSON Web Tokens (JWT). Every request to a private endpoint must include an `Authorization` header with a Bearer token.
 
-## Health
+**Example Header:**
 
-### GET /health
+```
+Authorization: Bearer <YOUR_JWT_TOKEN>
+```
 
-Checks the health of the application.
+**Authentication Failure:**
 
-**Responses:**
-
-- **200 OK:**
-  ```json
-  {
-    "success": true,
-    "data": "OK",
-    "message": "Health check successful"
-  }
-  ```
-
----
-
-## Catalog
-
-### GET /catalog/:slug
-
-Retrieves a catalog by its slug. This is a public route.
-
-**Parameters:**
-
-- `slug` (string): The slug of the catalog.
-
-**Responses:**
-
-- **200 OK:**
-  ```json
-  {
-    "success": true,
-    "data": {
-      // catalog object
-    },
-    "message": "Catalog fetched successfully"
-  }
-  ```
-- **404 Not Found:**
-  ```json
-  {
-    "success": false,
-    "data": null,
-    "message": "Catalog not found"
-  }
-  ```
-
-### POST /catalogs
-
-Creates a new catalog. This is a private route.
-
-**Request Body:**
+If a valid token is not provided for a protected route, the API will respond with a `401 Unauthorized` error.
 
 ```json
 {
-  "name": "My Catalog",
-  "slug": "my-catalog"
+  "success": false,
+  "data": null,
+  "message": "Authentication failed: No token provided"
 }
 ```
 
-**Responses:**
+### 2. Authorization
 
-- **201 Created:**
-  ```json
-  {
-    "success": true,
-    "data": {
-      // created catalog object
-    },
-    "message": "Catalog created successfully"
-  }
-  ```
-- **400 Bad Request:**
-  ```json
-  {
-    "success": false,
-    "data": null,
-    "message": "Invalid request body"
-  }
-  ```
+The API defines three levels of access for its routes:
 
-### PUT /catalogs/:id
+-   **PUBLIC:** These routes are open and do not require any authentication.
+-   **STAFF:** These routes are accessible to users with the `STAFF` or `ADMIN` role.
+-   **ADMIN:** These routes are restricted to users with the `ADMIN` role only.
 
-Updates a catalog. This is a private route.
+The required role for each endpoint is specified in its documentation.
 
-**Parameters:**
+### 3. Standard Error Response Format
 
-- `id` (string): The ID of the catalog.
+The API uses a standard error response format for all failed requests.
 
-**Request Body:**
+-   **400 Bad Request**
 
-```json
-{
-  "name": "Updated Catalog Name"
-}
-```
+    Indicates a client-side error, such as invalid JSON or missing required fields.
 
-**Responses:**
-
-- **200 OK:**
-  ```json
-  {
-    "success": true,
-    "data": {
-      // updated catalog object
-    },
-    "message": "Catalog updated successfully"
-  }
-  ```
-- **404 Not Found:**
-  ```json
-  {
-    "success": false,
-    "data": null,
-    "message": "Catalog not found"
-  }
-  ```
-
-### DELETE /catalogs/:id
-
-Deletes a catalog. This is a private route.
-
-**Parameters:**
-
-- `id` (string): The ID of the catalog.
-
-**Responses:**
-
-- **200 OK:**
-  ```json
-  {
-    "success": true,
-    "data": null,
-    "message": "Catalog deleted successfully"
-  }
-  ```
-- **404 Not Found:**
-  ```json
-  {
-    "success": false,
-    "data": null,
-    "message": "Catalog not found"
-  }
-  ```
-
-### GET /catalogs
-
-Lists all catalogs for the authenticated user's shop. This is a private route.
-
-**Responses:**
-
-- **200 OK:**
-  ```json
-  {
-    "success": true,
-    "data": [
-      // array of catalog objects
-    ],
-    "message": "Catalogs fetched successfully"
-  }
-  ```
-
-### POST /catalogs/:id/products
-
-Adds products to a catalog. This is a private route.
-
-**Parameters:**
-
-- `id` (string): The ID of the catalog.
-
-**Request Body:**
-
-```json
-{
-  "productIds": ["productId1", "productId2"]
-}
-```
-
-**Responses:**
-
-- **200 OK:**
-  ```json
-  {
-    "success": true,
-    "data": {
-      // updated catalog object
-    },
-    "message": "Products added to catalog successfully"
-  }
-  ```
-- **404 Not Found:**
-  ```json
-  {
-    "success": false,
-    "data": null,
-    "message": "Catalog not found"
-  }
-  ```
-
-### DELETE /catalogs/:id/products/:productId
-
-Removes a product from a catalog. This is a private route.
-
-**Parameters:**
-
-- `id` (string): The ID of the catalog.
-- `productId` (string): The ID of the product.
-
-**Responses:**
-
-- **200 OK:**
-  ```json
-  {
-    "success": true,
-    "data": {
-      // updated catalog object
-    },
-    "message": "Product removed from catalog successfully"
-  }
-  ```
-- **404 Not Found:**
-  ```json
-  {
-    "success": false,
-    "data": null,
-    "message": "Catalog or product not found"
-  }
-  ```
-
----
-
-## Order
-
-### POST /
-
-Creates a new order.
-
-**Request Body:**
-
-```json
-{
-  "catalog_id": "catalogId",
-  "items": [
+    ```json
     {
-      "product_id": "productId",
-      "quantity": 1
+      "success": false,
+      "data": null,
+      "message": "Invalid request body"
     }
-  ]
-}
-```
+    ```
 
-**Responses:**
+-   **401 Unauthorized**
 
-- **201 Created:**
-  ```json
-  {
-    "success": true,
-    "data": {
-      // created order object
-    },
-    "message": "Order placed successfully"
-  }
-  ```
-- **400 Bad Request:**
-  ```json
-  {
-    "success": false,
-    "data": null,
-    "message": "Invalid request body"
-  }
-  ```
+    Indicates that the request requires authentication, but a valid token was not provided.
 
-### GET /
+    ```json
+    {
+      "success": false,
+      "data": null,
+      "message": "Authentication failed: Invalid token"
+    }
+    ```
 
-Lists all orders for the authenticated user's shop. This is a private route.
+-   **403 Forbidden**
 
-**Responses:**
+    Indicates that the authenticated user does not have the necessary permissions to access the resource.
 
-- **200 OK:**
-  ```json
-  {
-    "success": true,
-    "data": [
-      // array of order objects
-    ],
-    "message": "Orders fetched successfully"
-  }
-  ```
+    ```json
+    {
+      "success": false,
+      "data": null,
+      "message": "Forbidden: You do not have access to this resource"
+    }
+    ```
 
-### GET /:id
+-   **404 Not Found**
 
-Gets an order by its ID. This is a private route.
+    Indicates that the requested resource could not be found on the server.
 
-**Parameters:**
+    ```json
+    {
+      "success": false,
+      "data": null,
+      "message": "Resource not found"
+    }
+    ```
 
-- `id` (string): The ID of the order.
+-   **500 Internal Server Error**
 
-**Responses:**
+    Indicates a server-side error.
 
-- **200 OK:**
-  ```json
-  {
-    "success": true,
-    "data": {
-      // order object
-    },
-    "message": "Order details fetched successfully"
-  }
-  ```
-- **404 Not Found:**
-  ```json
-  {
-    "success": false,
-    "data": null,
-    "message": "Order not found"
-  }
-  ```
+    ```json
+    {
+      "success": false,
+      "data": null,
+      "message": "An unexpected error occurred"
+    }
+    ```
 
 ---
 
-## Product
+## API Endpoints
 
-### POST /
+### Health Check
 
-Creates a new product. This is a private route.
+-   **Endpoint:** `/health`
+-   **Method:** `GET`
+-   **Access:** `PUBLIC`
+-   **Description:** Checks the health of the API.
 
-**Request Body:**
-
-```json
-{
-  "name": "My Product",
-  "description": "Product description",
-  "price": 100,
-  "stock": 10
-}
-```
-
-**Responses:**
-
-- **201 Created:**
-  ```json
-  {
-    "success": true,
-    "data": {
-      // created product object
-    },
-    "message": "Product created successfully"
-  }
-  ```
-- **400 Bad Request:**
-  ```json
-  {
-    "success": false,
-    "data": null,
-    "message": "Invalid request body"
-  }
-  ```
-
-### PUT /:id
-
-Updates a product. This is a private route.
-
-**Parameters:**
-
-- `id` (string): The ID of the product.
-
-**Request Body:**
+**Success Response (200 OK)**
 
 ```json
 {
-  "name": "Updated Product Name"
+  "success": true,
+  "data": {
+    "status": "UP",
+    "timestamp": "2023-10-27T10:00:00.000Z"
+  },
+  "message": "API is healthy"
 }
 ```
 
-**Responses:**
+### Shop
 
-- **200 OK:**
-  ```json
-  {
-    "success": true,
-    "data": {
-      // updated product object
-    },
-    "message": "Product updated successfully"
-  }
-  ```
-- **404 Not Found:**
-  ```json
-  {
-    "success": false,
-    "data": null,
-    "message": "Product not found"
-  }
-  ```
+#### Get Shop Details
 
-### DELETE /:id
+-   **Endpoint:** `/shop/:shop_id`
+-   **Method:** `GET`
+-   **Access:** `STAFF`
+-   **URL Params:**
+    -   `shop_id` (string, required)
 
-Deletes a product. This is a private route.
-
-**Parameters:**
-
-- `id` (string): The ID of the product.
-
-**Responses:**
-
-- **200 OK:**
-  ```json
-  {
-    "success": true,
-    "data": null,
-    "message": "Product deleted successfully"
-  }
-  ```
-- **404 Not Found:**
-  ```json
-  {
-    "success": false,
-    "data": null,
-    "message": "Product not found"
-  }
-  ```
-
-### GET /
-
-Lists all products for the authenticated user's shop. This is a private route.
-
-**Responses:**
-
-- **200 OK:**
-  ```json
-  {
-    "success": true,
-    "data": [
-      // array of product objects
-    ],
-    "message": "Products fetched successfully"
-  }
-  ```
-
-### PATCH /:id/stock
-
-Updates the stock of a product. This is a private route.
-
-**Parameters:**
-
-- `id` (string): The ID of the product.
-
-**Request Body:**
+**Success Response (200 OK)**
 
 ```json
 {
-  "stock": 20
+  "success": true,
+  "data": {
+    "id": "a1b2c3d4-e5f6-7890-1234-567890abcdef",
+    "shop_name": "The Corner Store",
+    "shop_phone": "+1234567890",
+    "shop_email": "contact@thecornerstore.com",
+    "shop_address": "123 Main Street, Anytown, USA",
+    "shop_logo_url": "https://example.com/logo.png",
+    "shop_images": "["https://example.com/image1.png", "https://example.com/image2.png"]",
+    "is_active": true,
+    "created_at": "2023-01-01T12:00:00.000Z",
+    "updated_at": "2023-01-01T12:00:00.000Z"
+  },
+  "message": "Shop details retrieved successfully"
 }
 ```
 
-**Responses:**
+### User
 
-- **200 OK:**
-  ```json
-  {
-    "success": true,
-    "data": {
-      // updated product object
-    },
-    "message": "Product stock updated successfully"
-  }
-  ```
-- **404 Not Found:**
-  ```json
-  {
-    "success": false,
-    "data": null,
-    "message": "Product not found"
-  }
-  ```
+#### Get User Details
 
----
+-   **Endpoint:** `/users/:user_id`
+-   **Method:** `GET`
+-   **Access:** `STAFF`
+-   **URL Params:**
+    -   `user_id` (string, required)
 
-## Shop
-
-### GET /
-
-Gets the details of the authenticated user's shop. This is a private route.
-
-**Responses:**
-
-- **200 OK:**
-  ```json
-  {
-    "success": true,
-    "data": {
-      // shop object
-    },
-    "message": "Shop details fetched successfully"
-  }
-  ```
-
-### PUT /
-
-Updates the shop's profile. This is a private route restricted to admins.
-
-**Request Body:**
+**Success Response (200 OK)**
 
 ```json
 {
-  "name": "My Awesome Shop"
+  "success": true,
+  "data": {
+    "id": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+    "shop_id": "a1b2c3d4-e5f6-7890-1234-567890abcdef",
+    "role": "ADMIN",
+    "name": "John Doe",
+    "phone": "+1987654321",
+    "email": "john.doe@example.com",
+    "profile_image_url": "https://example.com/profile.jpg",
+    "is_active": true,
+    "last_login_at": "2023-10-26T18:30:00.000Z",
+    "created_at": "2023-01-15T09:00:00.000Z",
+    "updated_at": "2023-10-26T18:30:00.000Z"
+  },
+  "message": "User details retrieved successfully"
 }
 ```
 
-**Responses:**
+### Products
 
-- **200 OK:**
-  ```json
-  {
-    "success": true,
-    "data": {
-      // updated shop object
-    },
-    "message": "Shop profile updated successfully"
-  }
-  ```
+#### Get All Products
 
----
+-   **Endpoint:** `/products`
+-   **Method:** `GET`
+-   **Access:** `STAFF`
 
-## User
-
-### POST /staff
-
-Creates a new staff user. This is a private route restricted to admins.
-
-**Request Body:**
+**Success Response (200 OK)**
 
 ```json
 {
-  "email": "staff@example.com",
-  "password": "password",
-  "role": "staff"
+  "success": true,
+  "data": [
+    {
+      "id": "p1a2b3c4-d5e6-f789-0123-456789abcdef",
+      "shop_id": "a1b2c3d4-e5f6-7890-1234-567890abcdef",
+      "sku_code": "TS-BLK-L",
+      "product_name": "Black T-Shirt",
+      "description": "A comfortable black t-shirt made from 100% cotton.",
+      "price": 25.99,
+      "currency": "INR",
+      "stock_quantity": 100,
+      "is_active": true,
+      "thumbnail_url": "https://example.com/tshirt_thumb.jpg",
+      "image_urls": "["https://example.com/tshirt_front.jpg", "https://example.com/tshirt_back.jpg"]",
+      "category": "Apparel",
+      "created_at": "2023-02-01T10:00:00.000Z",
+      "updated_at": "2023-02-01T10:00:00.000Z"
+    },
+    {
+      "id": "p2b3c4d5-e6f7-8901-2345-67890abcdef1",
+      "shop_id": "a1b2c3d4-e5f6-7890-1234-567890abcdef",
+      "sku_code": "MUG-WHT",
+      "product_name": "White Coffee Mug",
+      "description": "A classic white ceramic coffee mug.",
+      "price": 12.50,
+      "currency": "INR",
+      "stock_quantity": 50,
+      "is_active": true,
+      "thumbnail_url": "https://example.com/mug_thumb.jpg",
+      "image_urls": "["https://example.com/mug_front.jpg", "https://example.com/mug_side.jpg"]",
+      "category": "Homeware",
+      "created_at": "2023-03-10T14:20:00.000Z",
+      "updated_at": "2023-03-10T14:20:00.000Z"
+    }
+  ],
+  "message": "Products retrieved successfully"
 }
 ```
 
-**Responses:**
+### Catalogs
 
-- **201 Created:**
-  ```json
-  {
-    "success": true,
-    "data": {
-      // created user object
-    },
-    "message": "Staff created successfully"
-  }
-  ```
-- **400 Bad Request:**
-  ```json
-  {
-    "success": false,
-    "data": null,
-    "message": "Invalid request body"
-  }
-  ```
+#### Get Catalog by Slug
 
-### GET /staff
+-   **Endpoint:** `/:catalog_slug`
+-   **Method:** `GET`
+-   **Access:** `PUBLIC`
+-   **URL Params:**
+    -   `catalog_slug` (string, required)
 
-Lists all staff users. This is a private route restricted to admins.
-
-**Responses:**
-
-- **200 OK:**
-  ```json
-  {
-    "success": true,
-    "data": [
-      // array of user objects
-    ],
-    "message": "Staff fetched successfully"
-  }
-  ```
-
-### PATCH /staff/:id/status
-
-Updates a staff user's status. This is a private route restricted to admins.
-
-**Parameters:**
-
-- `id` (string): The ID of the user.
-
-**Request Body:**
+**Success Response (200 OK)**
 
 ```json
 {
-  "status": "inactive"
+  "success": true,
+  "data": {
+    "id": "c1d2e3f4-g5h6-i789-j012-k34567lmnop",
+    "shop_id": "a1b2c3d4-e5f6-7890-1234-567890abcdef",
+    "catalog_name": "Summer Collection",
+    "catalog_slug": "summer-collection",
+    "is_active": true,
+    "created_by": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+    "created_at": "2023-06-01T11:00:00.000Z",
+    "updated_at": "2023-06-01T11:00:00.000Z",
+    "products": [
+      {
+        "id": "cp1",
+        "product": {
+          "id": "p1a2b3c4-d5e6-f789-0123-456789abcdef",
+          "product_name": "Black T-Shirt",
+          "price": 25.99,
+          "thumbnail_url": "https://example.com/tshirt_thumb.jpg"
+        }
+      },
+      {
+        "id": "cp2",
+        "product": {
+          "id": "p2b3c4d5-e6f7-8901-2345-67890abcdef1",
+          "product_name": "White Coffee Mug",
+          "price": 12.50,
+          "thumbnail_url": "https://example.com/mug_thumb.jpg"
+        }
+      }
+    ]
+  },
+  "message": "Catalog retrieved successfully"
 }
 ```
 
-**Responses:**
+#### Create Order from Catalog
 
-- **200 OK:**
-  ```json
-  {
-    "success": true,
-    "data": {
-      // updated user object
-    },
-    "message": "Staff status updated successfully"
-  }
-  ```
-- **404 Not Found:**
-  ```json
-  {
-    "success": false,
-    "data": null,
-    "message": "User not found"
-  }
-  ```
+-   **Endpoint:** `/:catalog_slug/order`
+-   **Method:** `POST`
+-   **Access:** `PUBLIC`
+-   **URL Params:**
+    -   `catalog_slug` (string, required)
+-   **Request Body:**
 
-### GET /me
+    ```json
+    {
+      "order_items": [
+        {
+          "product_id": "p1a2b3c4-d5e6-f789-0123-456789abcdef",
+          "quantity": 2
+        },
+        {
+          "product_id": "p2b3c4d5-e6f7-8901-2345-67890abcdef1",
+          "quantity": 1
+        }
+      ]
+    }
+    ```
 
-Gets the profile of the authenticated user. This is a private route.
+**Success Response (201 Created)**
 
-**Responses:**
-
-- **200 OK:**
-  ```json
-  {
-    "success": true,
-    "data": {
-      // user object
-    },
-    "message": "Profile fetched successfully"
-  }
-  ```
+```json
+{
+  "success": true,
+  "data": {
+    "id": "o1p2q3r4-s5t6-u789-v012-w34567xzy",
+    "shop_id": "a1b2c3d4-e5f6-7890-1234-567890abcdef",
+    "catalog_id": "c1d2e3f4-g5h6-i789-j012-k34567lmnop",
+    "order_items": "[{"product_id":"p1a2b3c4-d5e6-f789-0123-456789abcdef","quantity":2},{"product_id":"p2b3c4d5-e6f7-8901-2345-67890abcdef1","quantity":1}]",
+    "total_items": 3,
+    "order_source": "CATALOG_LINK",
+    "whatsapp_sent": false,
+    "created_at": "2023-10-27T14:00:00.000Z"
+  },
+  "message": "Order created successfully"
+}
+```
