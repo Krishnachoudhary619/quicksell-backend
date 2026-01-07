@@ -1,0 +1,168 @@
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// ENUMS
+
+enum Role {
+  ADMIN
+  STAFF
+}
+
+// MODELS
+
+model Shop {
+  id            String     @id @default(uuid())
+  shop_name     String
+  shop_phone    String
+  shop_email    String?
+  shop_address  String?    @db.Text
+  shop_logo_url String?    @db.Text
+  shop_images   Json?
+  is_active     Boolean    @default(true)
+  created_at    DateTime   @default(now())
+  updated_at    DateTime   @updatedAt
+
+  // Relations
+  users         User[]
+  products      Product[]
+  catalogs      Catalog[]
+  orders        Order[]
+}
+
+model User {
+  id                String    @id @default(uuid())
+  shop_id           String
+  role              Role
+  name              String
+  phone             String
+  email             String?   @unique
+  profile_image_url String?   @db.Text
+  is_active         Boolean   @default(true)
+  last_login_at     DateTime?
+  created_at        DateTime  @default(now())
+  updated_at        DateTime  @updatedAt
+
+  // Relations
+  shop              Shop           @relation(fields: [shop_id], references: [id], onDelete: Cascade)
+  refresh_tokens    RefreshToken[]
+  created_catalogs  Catalog[]      @relation("CatalogCreator")
+
+  // Constraints & Indexes
+  @@unique([shop_id, phone], name: "unique_phone_per_shop")
+  // Note: The 'One ADMIN per shop' rule requires a partial/filtered unique index on (`shop_id`) where `role` = 'ADMIN'.
+  // This is not supported directly in Prisma schema. You should enforce this rule in your application logic
+  // or add a raw SQL migration to create the index.
+}
+
+model OtpSession {
+  id          String   @id @default(uuid())
+  phone       String
+  otp_code    String
+  expires_at  DateTime
+  is_used     Boolean  @default(false)
+  created_at  DateTime @default(now())
+
+  // Note: "Auto-expirable" entries must be handled by a scheduled job (e.g., cron) 
+  // that periodically deletes records where `expires_at` is in the past.
+}
+
+model RefreshToken {
+  id         String   @id @default(uuid())
+  user_id    String
+  token      String   @db.Text
+  expires_at DateTime
+  is_revoked Boolean  @default(false)
+  created_at DateTime @default(now())
+
+  // Relations
+  user       User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  // Indexes
+  @@index([user_id])
+}
+
+model Product {
+  id              String   @id @default(uuid())
+  shop_id         String
+  sku_code        String?
+  product_name    String
+  description     String?  @db.Text
+  price           Decimal  @db.Decimal(10, 2)
+  currency        String   @default("INR")
+  stock_quantity  Int      @default(0)
+  is_active       Boolean  @default(true)
+  thumbnail_url   String?  @db.Text
+  image_urls      Json?
+  category        String?
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+
+  // Relations
+  shop            Shop             @relation(fields: [shop_id], references: [id], onDelete: Cascade)
+  catalog_items   CatalogProduct[]
+
+  // Indexes
+  @@index([shop_id])
+}
+
+model Catalog {
+  id           String   @id @default(uuid())
+  shop_id      String
+  catalog_name String
+  catalog_slug String   @unique
+  is_active    Boolean  @default(true)
+  created_by   String
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
+
+  // Relations
+  shop          Shop             @relation(fields: [shop_id], references: [id], onDelete: Cascade)
+  creator       User             @relation("CatalogCreator", fields: [created_by], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  products      CatalogProduct[]
+  orders        Order[]
+
+  // Indexes
+  @@index([shop_id])
+  @@index([created_by])
+}
+
+model CatalogProduct {
+  id            String   @id @default(uuid())
+  catalog_id    String
+  product_id    String
+  display_order Int      @default(0)
+  created_at    DateTime @default(now())
+
+  // Relations
+  catalog       Catalog @relation(fields: [catalog_id], references: [id], onDelete: Cascade)
+  product       Product @relation(fields: [product_id], references: [id], onDelete: Cascade)
+
+  // Constraints & Indexes
+  @@unique([catalog_id, product_id], name: "unique_product_per_catalog")
+  @@index([product_id])
+}
+
+model Order {
+  id            String   @id @default(uuid())
+  shop_id       String
+  catalog_id    String
+  order_items   Json
+  total_items   Int?
+  order_source  String   @default("CATALOG_LINK")
+  whatsapp_sent Boolean  @default(false)
+  created_at    DateTime @default(now())
+
+  // Relations
+  shop          Shop    @relation(fields: [shop_id], references: [id], onDelete: Cascade)
+  catalog       Catalog @relation(fields: [catalog_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  // Indexes
+  @@index([shop_id])
+  @@index([catalog_id])
+}

@@ -1,12 +1,13 @@
-import express from 'express';
-const app = express();
+import express, { Express, Request, Response } from "express";
+import routes from "./routes";
 
-app.get('/', (req, res) => {
-  const name = process.env.NAME || 'World';
-  res.send(`Hello ${name}!`);
-});
+const app: Express = express();
+const port = process.env.PORT || 3000;
 
-const port = parseInt(process.env.PORT || '3000');
+app.use(express.json());
+
+app.use("/", routes);
+
 app.listen(port, () => {
-  console.log(`listening on port ${port}`);
+  console.log(`[server]: Server is running at http://localhost:${port}`);
 });
