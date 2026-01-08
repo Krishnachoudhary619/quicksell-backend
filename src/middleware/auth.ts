@@ -1,7 +1,7 @@
 
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import { sendResponse } from '../utils/response';
+import { sendError } from '../utils/response';
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
@@ -18,7 +18,7 @@ export const auth = async (req: AuthRequest, res: Response, next: NextFunction) 
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return sendResponse(res, 401, false, null, 'Unauthorized');
+    return sendError(res, 'Unauthorized', 401);
   }
 
   const token = authHeader.split(' ')[1];
@@ -33,13 +33,13 @@ export const auth = async (req: AuthRequest, res: Response, next: NextFunction) 
     req.user = payload;
     next();
   } catch (error) {
-    return sendResponse(res, 401, false, null, 'Unauthorized');
+    return sendError(res, 'Unauthorized', 401);
   }
 };
 
 export const adminOnly = (req: AuthRequest, res: Response, next: NextFunction) => {
   if (req.user?.role !== 'ADMIN') {
-    return sendResponse(res, 403, false, null, 'Forbidden: Admins only');
+    return sendError(res, 'Forbidden: Admins only', 403);
   }
   next();
 };

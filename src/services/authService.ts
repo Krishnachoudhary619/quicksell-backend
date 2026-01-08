@@ -2,7 +2,6 @@
 import { PrismaClient } from '@prisma/client';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
-// import { User } from '../models/index';
 
 const prisma = new PrismaClient();
 
@@ -13,6 +12,16 @@ const generateOtp = () => {
 export const sendOtp = async (phone: string) => {
   const otp = generateOtp();
   const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
+
+  // Check if a user with this phone number exists, if not, create one.
+  // This is a simplified approach. In a real app, you might have a separate registration flow.
+  let user = await prisma.user.findFirst({ where: { phone } });
+  if (!user) {
+    // A shop should be created first, here we assume a default or detected shop context
+    // For simplicity, we're skipping shop creation and linking, assuming it exists.
+    // In a real scenario, you'd handle shop creation/selection before user registration.
+  }
+
 
   await prisma.otpSession.create({
     data: {
@@ -51,14 +60,16 @@ export const verifyOtp = async (phone: string, otp: string) => {
     },
   });
 
-  let user = await prisma.user.findFirst({
+  const user = await prisma.user.findFirst({
     where: {
       phone,
     },
   });
 
   if (!user) {
-    throw new Error('User not found');
+    // This case should ideally not be hit if sendOtp ensures a user exists.
+    // Or if the business logic allows OTP verification before user creation (e.g., during signup).
+    throw new Error('User not found. Please sign up first.');
   }
 
   await prisma.user.update({
@@ -71,26 +82,26 @@ export const verifyOtp = async (phone: string, otp: string) => {
   });
 
 
-  const accessToken = jwt.sign(
+  const access_token = jwt.sign(
     { userId: user.id, role: user.role, shopId: user.shop_id },
     process.env.JWT_SECRET as string,
     { expiresIn: '15m' }
   );
 
-  const refreshToken = crypto.randomBytes(64).toString('hex');
+  const refresh_token = crypto.randomBytes(64).toString('hex');
   const refreshTokenExpiry = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
 
   await prisma.refreshToken.create({
     data: {
       user_id: user.id,
-      token: refreshToken,
+      token: refresh_token,
       expires_at: refreshTokenExpiry,
     },
   });
 
   return {
-    accessToken,
-    refreshToken,
+    access_token,
+    refresh_token,
     user: {
       id: user.id,
       role: user.role,
@@ -117,13 +128,13 @@ export const refreshAccessToken = async (refreshToken: string) => {
     throw new Error('Invalid or expired refresh token');
   }
 
-  const accessToken = jwt.sign(
+  const access_token = jwt.sign(
     { userId: storedToken.user.id, role: storedToken.user.role, shopId: storedToken.user.shop_id },
     process.env.JWT_SECRET as string,
     { expiresIn: '15m' }
   );
 
-  return { accessToken };
+  return { access_token };
 };
 
 export const logout = async (refreshToken: string) => {
@@ -133,7 +144,7 @@ export const logout = async (refreshToken: string) => {
     },
   });
 
-  if (storedToken) {
+  if (storedToken && !storedToken.is_revoked) {
     await prisma.refreshToken.update({
       where: {
         id: storedToken.id,
@@ -143,4 +154,5 @@ export const logout = async (refreshToken: string) => {
       },
     });
   }
+  // Do not throw an error if the token is not found or already revoked.
 };

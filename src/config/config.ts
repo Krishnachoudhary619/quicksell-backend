@@ -9,7 +9,7 @@ const config = {
     password: process.env.DB_PASSWORD || "",
     database: process.env.DB_NAME || "test",
   },
-  port: process.env.PORT || 3000,
+  port: process.env.PORT || 3001,
 };
 
 export default config;

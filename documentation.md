@@ -6,8 +6,8 @@ This document provides detailed information about the API endpoints for this pro
 ## Table of Contents
 
 - [Authentication](#authentication)
-  - [POST /auth/signup](#post-authsignup)
-  - [POST /auth/login](#post-authlogin)
+  - [POST /auth/send-otp](#post-authsend-otp)
+  - [POST /auth/verify-otp](#post-authverify-otp)
   - [POST /auth/refresh-token](#post-authrefresh-token)
   - [POST /auth/logout](#post-authlogout)
 - [Users](#users)
@@ -44,15 +44,12 @@ This document provides detailed information about the API endpoints for this pro
 
 ## Authentication
 
-### POST /auth/signup
-Creates a new shop and an admin user for that shop.
+### POST /auth/send-otp
+Sends an OTP to the user's phone number.
 
 **Request Body:**
 ```json
 {
-  "shop_name": "My Awesome Shop",
-  "shop_phone": "1234567890",
-  "name": "Admin User",
   "phone": "0987654321"
 }
 ```
@@ -60,15 +57,12 @@ Creates a new shop and an admin user for that shop.
 **Response:**
 ```json
 {
-  "message": "Shop created successfully. OTP sent to your phone.",
-  "data": {
-    "otp_session_id": "a1b2c3d4-e5f6-7890-1234-567890abcdef"
-  }
+  "message": "OTP sent successfully"
 }
 ```
 
-### POST /auth/login
-Logs in a user and returns an access token and a refresh token.
+### POST /auth/verify-otp
+Verifies the OTP and returns an access token and a refresh token.
 
 **Request Body:**
 ```json
@@ -111,6 +105,13 @@ Refreshes an access token.
 
 ### POST /auth/logout
 Logs out a user.
+
+**Request Body:**
+```json
+{
+  "refreshToken": "e63a8c3e-8e8e-4f3b-8c6c-8e8e8e8e8e8e"
+}
+```
 
 **Response:**
 ```json

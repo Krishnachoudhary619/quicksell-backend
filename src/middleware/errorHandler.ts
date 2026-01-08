@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { sendResponse } from '../utils/response';
+import { sendError } from '../utils/response';
 
 export const errorHandler = (
   err: Error,
@@ -8,5 +8,5 @@ export const errorHandler = (
   next: NextFunction
 ) => {
   console.error(err.stack);
-  sendResponse(res, 500, false, null, 'Something went wrong!');
+  sendError(res, 'Something went wrong!', 500);
 };
