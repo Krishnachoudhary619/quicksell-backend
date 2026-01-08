@@ -4,6 +4,10 @@ info:
   version: 1.0.0
   description: This document provides detailed information about the API endpoints for this project.
 
+servers:
+  - url: https://3000-firebase-quick-share-backend-1767762112097.cluster-a6zx3cwnb5hnuwbgyxmofxpkfe.cloudworkstations.dev
+    description: Local
+
 components:
   schemas:
     SuccessResponse:

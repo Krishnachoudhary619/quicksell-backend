@@ -45,640 +45,144 @@ This document provides detailed information about the API endpoints for this pro
 ## Authentication
 
 ### POST /auth/send-otp
-Sends an OTP to the user's phone number.
+Sends a one-time password (OTP) to the user's phone number.
 
 **Request Body:**
 ```json
 {
-  "phone": "0987654321"
+  "phone": "9876543210"
 }
 ```
 
-**Response:**
-```json
-{
-  "message": "OTP sent successfully"
-}
-```
+**Responses:**
+
+*   **200: OTP sent successfully**
+    ```json
+    {
+      "success": true,
+      "data": {},
+      "message": "OTP sent successfully"
+    }
+    ```
+*   **400: Invalid input**
+    ```json
+    {
+      "success": false,
+      "data": null,
+      "message": "Phone number must be a valid 10-digit number"
+    }
+    ```
 
 ### POST /auth/verify-otp
-Verifies the OTP and returns an access token and a refresh token.
+Verifies the OTP and returns an access token, a refresh token, and user details.
 
 **Request Body:**
 ```json
 {
-  "phone": "0987654321",
+  "phone": "9876543210",
   "otp": "123456"
 }
 ```
 
-**Response:**
-```json
-{
-    "message": "Login successful",
-    "data": {
-        "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2NGEzYWY1ZC1lYjYyLTQxNWYtOTUxZS00YjI5ZDA0YjYyYjUiLCJzaG9wSWQiOiJiZTRlN2Q4OC05YjA5LTQ0MDUtYjE1Zi1kZTBlZGE0NDVmYWMiLCJyb2xlIjoiQURNSU4iLCJpYXQiOjE3MTY0NzEwODcsImV4cCI6MTcxNjQ3MTk4N30.i-2g2j-wAsA7fFEN2GmFwBfN8g9zY1Uo3t2a2e3n5Yw",
-        "refreshToken": "e63a8c3e-8e8e-4f3b-8c6c-8e8e8e8e8e8e"
+**Responses:**
+
+*   **200: Login successful**
+    ```json
+    {
+        "success": true,
+        "message": "Login successful",
+        "data": {
+            "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+            "refresh_token": "a1b2c3d4-e5f6-7890-1234-567890abcdef",
+            "user": {
+                "id": "a1b2c3d4-e5f6-7890-1234-567890abcdef",
+                "role": "ADMIN",
+                "shop_id": "b1c2d3e4-f5g6-7890-1234-567890abcdef"
+            }
+        }
     }
-}
-```
+    ```
+*   **400: Invalid input**
+    ```json
+    {
+      "success": false,
+      "data": null,
+      "message": "otp must be a 4 or 6 digit string"
+    }
+    ```
+*   **401: Authentication failed**
+    ```json
+    {
+      "success": false,
+      "data": null,
+      "message": "Invalid or expired OTP"
+    }
+    ```
 
 ### POST /auth/refresh-token
-Refreshes an access token.
+Obtain a new access token using a refresh token.
 
 **Request Body:**
 ```json
 {
-  "refreshToken": "e63a8c3e-8e8e-4f3b-8c6c-8e8e8e8e8e8e"
+  "refresh_token": "a1b2c3d4-e5f6-7890-1234-567890abcdef"
 }
 ```
 
-**Response:**
-```json
-{
-    "message": "Token refreshed successfully",
-    "data": {
-        "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2NGEzYWY1ZC1lYjYyLTQxNWYtOTUxZS00YjI5ZDA0YjYyYjUiLCJzaG9wSWQiOiJiZTRlN2Q4OC05YjA5LTQ0MDUtYjE1Zi1kZTBlZGE0NDVmYWMiLCJyb2xlIjoiQURNSU4iLCJpYXQiOjE3MTY0NzEwODcsImV4cCI6MTcxNjQ3MTk4N30.i-2g2j-wAsA7fFEN2GmFwBfN8g9zY1Uo3t2a2e3n5Yw"
+**Responses:**
+
+*   **200: Access token refreshed**
+    ```json
+    {
+        "success": true,
+        "message": "Access token refreshed",
+        "data": {
+            "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        }
     }
-}
-```
+    ```
+*   **400: Missing refresh token**
+    ```json
+    {
+        "success": false,
+        "data": null,
+        "message": "refresh_token is a required field"
+    }
+    ```
+*   **401: Invalid or expired refresh token**
+    ```json
+    {
+        "success": false,
+        "data": null,
+        "message": "Invalid or expired refresh token"
+    }
+    ```
 
 ### POST /auth/logout
-Logs out a user.
+Logs out the user by revoking their refresh token. This endpoint requires an `Authorization` header with a bearer token.
 
 **Request Body:**
 ```json
 {
-  "refreshToken": "e63a8c3e-8e8e-4f3b-8c6c-8e8e8e8e8e8e"
+  "refresh_token": "a1b2c3d4-e5f6-7890-1234-567890abcdef"
 }
 ```
 
-**Response:**
-```json
-{
-  "message": "Logout successful"
-}
-```
+**Responses:**
 
----
-
-## Users
-
-### POST /users/staff
-Creates a new staff user.
-
-**Request Body:**
-```json
-{
-  "name": "Staff User",
-  "phone": "1122334455",
-  "role": "STAFF"
-}
-```
-
-**Response:**
-```json
-{
-    "message": "Staff created successfully",
-    "data": {
-        "id": "a1b2c3d4-e5f6-7890-1234-567890abcdef",
-        "shop_id": "b1c2d3e4-f5g6-7890-1234-567890abcdef",
-        "role": "STAFF",
-        "name": "Staff User",
-        "phone": "1122334455",
-        "email": null,
-        "profile_image_url": null,
-        "is_active": true,
-        "last_login_at": null,
-        "created_at": "2024-05-23T12:35:45.000Z",
-        "updated_at": "2024-05-23T12:35:45.000Z"
-    }
-}
-```
-
-### GET /users/staff
-Lists all staff users.
-
-**Response:**
-```json
-{
-    "message": "Staff listed successfully",
-    "data": [
-        {
-            "id": "a1b2c3d4-e5f6-7890-1234-567890abcdef",
-            "shop_id": "b1c2d3e4-f5g6-7890-1234-567890abcdef",
-            "role": "STAFF",
-            "name": "Staff User",
-            "phone": "1122334455",
-            "email": null,
-            "profile_image_url": null,
-            "is_active": true,
-            "last_login_at": null,
-            "created_at": "2024-05-23T12:35:45.000Z",
-            "updated_at": "2024-05-23T12:35:45.000Z"
-        }
-    ]
-}
-```
-
-### PATCH /users/staff/:id/status
-Updates the status of a staff user.
-
-**Request Body:**
-```json
-{
-  "is_active": false
-}
-```
-
-**Response:**
-```json
-{
-    "message": "Staff status updated successfully",
-    "data": {
-        "id": "a1b2c3d4-e5f6-7890-1234-567890abcdef",
-        "is_active": false
-    }
-}
-```
-
-### GET /users/me
-Gets the profile of the currently authenticated user.
-
-**Response:**
-```json
-{
-    "message": "Profile fetched successfully",
-    "data": {
-        "id": "a1b2c3d4-e5f6-7890-1234-567890abcdef",
-        "shop_id": "b1c2d3e4-f5g6-7890-1234-567890abcdef",
-        "role": "ADMIN",
-        "name": "Admin User",
-        "phone": "0987654321",
-        "email": "admin@example.com",
-        "profile_image_url": null,
-        "is_active": true,
-        "last_login_at": "2024-05-23T12:35:45.000Z",
-        "created_at": "2024-05-23T12:35:45.000Z",
-        "updated_at": "2024-05-23T12:35:45.000Z"
-    }
-}
-```
-
----
-
-## Shop
-
-### POST /shop
-Creates a new shop.
-
-**Request Body:**
-```json
-{
-  "shop_name": "My Awesome Shop",
-  "shop_phone": "1234567890"
-}
-```
-
-**Response:**
-```json
-{
-    "message": "Shop created successfully",
-    "data": {
-        "id": "b1c2d3e4-f5g6-7890-1234-567890abcdef",
-        "shop_name": "My Awesome Shop",
-        "shop_phone": "1234567890",
-        "shop_email": null,
-        "shop_address": null,
-        "shop_logo_url": null,
-        "shop_images": null,
-        "is_active": true,
-        "created_at": "2024-05-23T12:35:45.000Z",
-        "updated_at": "2024-05-23T12:35:45.000Z"
-    }
-}
-```
-
-### GET /shop
-Gets the details of a shop.
-
-**Response:**
-```json
-{
-    "message": "Shop details fetched successfully",
-    "data": {
-        "id": "b1c2d3e4-f5g6-7890-1234-567890abcdef",
-        "shop_name": "My Awesome Shop",
-        "shop_phone": "1234567890",
-        "shop_email": "shop@example.com",
-        "shop_address": "123 Main St, Anytown, USA",
-        "shop_logo_url": "https://example.com/logo.png",
-        "shop_images": "[]",
-        "is_active": true,
-        "created_at": "2024-05-23T12:35:45.000Z",
-        "updated_at": "2024-05-23T12:35:45.000Z"
-    }
-}
-```
-
-### PATCH /shop
-Updates the details of a shop.
-
-**Request Body:**
-```json
-{
-  "shop_name": "My Updated Shop Name",
-  "shop_email": "new.email@example.com"
-}
-```
-
-**Response:**
-```json
-{
-    "message": "Shop updated successfully",
-    "data": {
-        "id": "b1c2d3e4-f5g6-7890-1234-567890abcdef",
-        "shop_name": "My Updated Shop Name",
-        "shop_phone": "1234567890",
-        "shop_email": "new.email@example.com",
-        "shop_address": "123 Main St, Anytown, USA",
-        "shop_logo_url": "https://example.com/logo.png",
-        "shop_images": "[]",
-        "is_active": true,
-        "created_at": "2024-05-23T12:35:45.000Z",
-        "updated_at": "2024-05-23T12:35:45.000Z"
-    }
-}
-```
-
----
-
-## Products
-
-### POST /products
-Creates a new product.
-
-**Request Body:**
-```json
-{
-  "product_name": "Sample Product",
-  "price": 99.99,
-  "stock_quantity": 100
-}
-```
-
-**Response:**
-```json
-{
-    "message": "Product created successfully",
-    "data": {
-        "id": "c1d2e3f4-g5h6-7890-1234-567890abcdef",
-        "shop_id": "b1c2d3e4-f5g6-7890-1234-567890abcdef",
-        "sku_code": "SKU123",
-        "product_name": "Sample Product",
-        "description": "This is a sample product.",
-        "price": 99.99,
-        "currency": "INR",
-        "stock_quantity": 100,
-        "is_active": true,
-        "thumbnail_url": null,
-        "image_urls": null,
-        "category": null,
-        "created_at": "2024-05-23T12:35:45.000Z",
-        "updated_at": "2024-05-23T12:35:45.000Z"
-    }
-}
-```
-
-### GET /products
-Lists all products.
-
-**Response:**
-```json
-{
-    "message": "Products listed successfully",
-    "data": [
-        {
-            "id": "c1d2e3f4-g5h6-7890-1234-567890abcdef",
-            "shop_id": "b1c2d3e4-f5g6-7890-1234-567890abcdef",
-            "sku_code": "SKU123",
-            "product_name": "Sample Product",
-            "description": "This is a sample product.",
-            "price": 99.99,
-            "currency": "INR",
-            "stock_quantity": 100,
-            "is_active": true,
-            "thumbnail_url": null,
-            "image_urls": null,
-            "category": null,
-            "created_at": "2024-05-23T12:35:45.000Z",
-            "updated_at": "2024-05-23T12:35:45.000Z"
-        }
-    ]
-}
-```
-
-### GET /products/:id
-Gets a single product by its ID.
-
-**Response:**
-```json
-{
-    "message": "Product fetched successfully",
-    "data": {
-        "id": "c1d2e3f4-g5h6-7890-1234-567890abcdef",
-        "shop_id": "b1c2d3e4-f5g6-7890-1234-567890abcdef",
-        "sku_code": "SKU123",
-        "product_name": "Sample Product",
-        "description": "This is a sample product.",
-        "price": 99.99,
-        "currency": "INR",
-        "stock_quantity": 100,
-        "is_active": true,
-        "thumbnail_url": null,
-        "image_urls": null,
-        "category": null,
-        "created_at": "2024-05-23T12:35:45.000Z",
-        "updated_at": "2024-05-23T12:35:45.000Z"
-    }
-}
-```
-
-### PATCH /products/:id
-Updates a product.
-
-**Request Body:**
-```json
-{
-  "price": 129.99,
-  "stock_quantity": 90
-}
-```
-
-**Response:**
-```json
-{
-    "message": "Product updated successfully",
-    "data": {
-        "id": "c1d2e3f4-g5h6-7890-1234-567890abcdef",
-        "price": 129.99,
-        "stock_quantity": 90
-    }
-}
-```
-
-### DELETE /products/:id
-Deletes a product.
-
-**Response:**
-```json
-{
-  "message": "Product deleted successfully"
-}
-```
-
----
-
-## Catalogs
-
-### POST /catalogs
-Creates a new catalog.
-
-**Request Body:**
-```json
-{
-  "catalog_name": "Summer Collection"
-}
-```
-
-**Response:**
-```json
-{
-    "message": "Catalog created successfully",
-    "data": {
-        "id": "d1e2f3g4-h5i6-7890-1234-567890abcdef",
-        "shop_id": "b1c2d3e4-f5g6-7890-1234-567890abcdef",
-        "catalog_name": "Summer Collection",
-        "catalog_slug": "summer-collection-12345",
-        "is_active": true,
-        "created_by": "a1b2c3d4-e5f6-7890-1234-567890abcdef",
-        "created_at": "2024-05-23T12:35:45.000Z",
-        "updated_at": "2024-05-23T12:35:45.000Z"
-    }
-}
-```
-
-### GET /catalogs
-Lists all catalogs.
-
-**Response:**
-```json
-{
-    "message": "Catalogs listed successfully",
-    "data": [
-        {
-            "id": "d1e2f3g4-h5i6-7890-1234-567890abcdef",
-            "shop_id": "b1c2d3e4-f5g6-7890-1234-567890abcdef",
-            "catalog_name": "Summer Collection",
-            "catalog_slug": "summer-collection-12345",
-            "is_active": true,
-            "created_by": "a1b2c3d4-e5f6-7890-1234-567890abcdef",
-            "created_at": "2024-05-23T12:35:45.000Z",
-            "updated_at": "2024-05-23T12:35:45.000Z"
-        }
-    ]
-}
-```
-
-### GET /:slug
-Gets a catalog by its slug.
-
-**Response:**
-```json
-{
-    "message": "Catalog fetched successfully",
-    "data": {
-        "id": "d1e2f3g4-h5i6-7890-1234-567890abcdef",
-        "shop_id": "b1c2d3e4-f5g6-7890-1234-567890abcdef",
-        "catalog_name": "Summer Collection",
-        "catalog_slug": "summer-collection-12345",
-        "is_active": true,
-        "products": [
-            {
-                "id": "c1d2e3f4-g5h6-7890-1234-567890abcdef",
-                "product_name": "Sample Product",
-                "price": 99.99
-            }
-        ]
-    }
-}
-```
-
-### GET /catalogs/:id
-Gets a single catalog by its ID.
-
-**Response:**
-```json
-{
-    "message": "Catalog fetched successfully",
-    "data": {
-        "id": "d1e2f3g4-h5i6-7890-1234-567890abcdef",
-        "shop_id": "b1c2d3e4-f5g6-7890-1234-567890abcdef",
-        "catalog_name": "Summer Collection",
-        "catalog_slug": "summer-collection-12345",
-        "is_active": true,
-        "created_by": "a1b2c3d4-e5f6-7890-1234-567890abcdef",
-        "created_at": "2024-05-23T12:35:45.000Z",
-        "updated_at": "2024-05-23T12:35:45.000Z",
-        "products": [
-            {
-                "id": "c1d2e3f4-g5h6-7890-1234-567890abcdef",
-                "display_order": 0,
-                "product": {
-                    "id": "c1d2e3f4-g5h6-7890-1234-567890abcdef",
-                    "product_name": "Sample Product",
-                    "price": 99.99
-                }
-            }
-        ]
-    }
-}
-```
-
-### PATCH /catalogs/:id
-Updates a catalog.
-
-**Request Body:**
-```json
-{
-  "catalog_name": "Winter Collection",
-  "is_active": false
-}
-```
-
-**Response:**
-```json
-{
-    "message": "Catalog updated successfully",
-    "data": {
-        "id": "d1e2f3g4-h5i6-7890-1234-567890abcdef",
-        "catalog_name": "Winter Collection",
-        "is_active": false
-    }
-}
-```
-
-### DELETE /catalogs/:id
-Deletes a catalog.
-
-**Response:**
-```json
-{
-  "message": "Catalog deleted successfully"
-}
-```
-
-### POST /catalogs/:id/products
-Adds products to a catalog.
-
-**Request Body:**
-```json
-{
-  "product_ids": ["c1d2e3f4-g5h6-7890-1234-567890abcdef"]
-}
-```
-
-**Response:**
-```json
-{
-  "message": "Products added to catalog successfully"
-}
-```
-
-### DELETE /catalogs/:id/products
-Removes products from a catalog.
-
-**Request Body:**
-```json
-{
-  "product_ids": ["c1d2e3f4-g5h6-7890-1234-567890abcdef"]
-}
-```
-
-**Response:**
-```json
-{
-  "message": "Products removed from catalog successfully"
-}
-```
-
-### PATCH /catalogs/:id/products/order
-Updates the display order of products in a catalog.
-
-**Request Body:**
-```json
-{
-  "products": [
-    { "product_id": "c1d2e3f4-g5h6-7890-1234-567890abcdef", "display_order": 1 }
-  ]
-}
-```
-
-**Response:**
-```json
-{
-  "message": "Product display order updated successfully"
-}
-```
-
----
-
-## Orders
-
-### POST /orders
-Creates a new order.
-
-**Request Body:**
-```json
-{
-  "catalog_id": "d1e2f3g4-h5i6-7890-1234-567890abcdef",
-  "order_items": [
+*   **200: Logged out successfully**
+    ```json
     {
-      "product_id": "c1d2e3f4-g5h6-7890-1234-567890abcdef",
-      "quantity": 2
+      "success": true,
+      "data": {},
+      "message": "Logged out successfully"
     }
-  ]
-}
-```
-
-**Response:**
-```json
-{
-    "message": "Order created successfully",
-    "data": {
-        "id": "e1f2g3h4-i5j6-7890-1234-567890abcdef",
-        "shop_id": "b1c2d3e4-f5g6-7890-1234-567890abcdef",
-        "catalog_id": "d1e2f3g4-h5i6-7890-1234-567890abcdef",
-        "order_items": "[{\"product_id\":\"c1d2e3f4-g5h6-7890-1234-567890abcdef\",\"quantity\":2}]",
-        "total_items": 2,
-        "order_source": "CATALOG_LINK",
-        "whatsapp_sent": false,
-        "created_at": "2024-05-23T12:35:45.000Z"
+    ```
+*   **401: User is not authenticated**
+    ```json
+    {
+      "success": false,
+      "data": null,
+      "message": "Unauthorized"
     }
-}
-```
-
----
-
-## Health
-
-### GET /health
-Checks the health of the API.
-
-**Response:**
-```json
-{
-  "status": "ok",
-  "timestamp": "2024-05-23T12:35:45.000Z"
-}
-```
+    ```
