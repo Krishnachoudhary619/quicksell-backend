@@ -29,3 +29,10 @@ export const verifyOtpSchema = z.object({
 export const refreshTokenSchema = z.object({
   refresh_token: z.string().nonempty('Refresh token is required'),
 });
+
+export const onboardShopSchema = z.object({
+  owner_name: z.string().min(2),
+  owner_phone: z.string().regex(/^[0-9]{10}$/, 'owner_phone must be a 10-digit number'),
+  shop_name: z.string().min(2),
+  shop_phone: z.string().regex(/^[0-9]{10}$/, 'shop_phone must be a 10-digit number'),
+});
