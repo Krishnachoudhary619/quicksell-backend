@@ -116,6 +116,15 @@ export const addProductsToCatalogSchema = z.object({
   product_ids: z.array(z.string().uuid()).min(1),
 }).strict();
 
+export const createOrderSchema = z.object({
+  catalog_id: z.string().uuid(),
+  items: z.array(
+    z.object({
+      product_id: z.string().uuid(),
+      quantity: z.number().int().min(1).max(100),
+    })
+  ).min(1).max(50),
+}).strict();
 
 
 

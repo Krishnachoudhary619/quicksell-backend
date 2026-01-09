@@ -4,7 +4,10 @@ import { generateWhatsAppMessage, generateWhatsAppRedirectUrl } from '../utils/w
 
 const prisma = new PrismaClient();
 
-export const createOrder = async (catalogId: string, items: { product_id: string; quantity: number }[]) => {
+export const createOrder = async (
+  catalogId: string,
+  items: { product_id: string; quantity: number }[]
+) => {
   const catalog = await prisma.catalog.findFirst({
     where: {
       id: catalogId,
@@ -16,10 +19,20 @@ export const createOrder = async (catalogId: string, items: { product_id: string
   });
 
   if (!catalog) {
-    throw new Error('Catalog not found or is inactive');
+    throw new Error('Catalog not found or inactive');
   }
 
-  const productIds = items.map((item) => item.product_id);
+  // Deduplicate product IDs
+  const productMap = new Map<string, number>();
+  for (const item of items) {
+    productMap.set(
+      item.product_id,
+      (productMap.get(item.product_id) || 0) + item.quantity
+    );
+  }
+
+  const productIds = Array.from(productMap.keys());
+
   const products = await prisma.product.findMany({
     where: {
       id: { in: productIds },
@@ -30,27 +43,29 @@ export const createOrder = async (catalogId: string, items: { product_id: string
   });
 
   if (products.length !== productIds.length) {
-    throw new Error('One or more products are invalid or out of stock');
+    throw new Error('One or more products are unavailable');
   }
 
-  const orderItems: any[] = [];
+  const orderItems = [];
   let totalItems = 0;
 
-  for (const item of items) {
-    const product = products.find((p) => p.id === item.product_id);
-    if (!product) {
-      throw new Error(`Product with ID ${item.product_id} not found`);
+  for (const product of products) {
+    const quantity = productMap.get(product.id)!;
+
+    if (quantity > product.stock_quantity) {
+      throw new Error(
+        `Insufficient stock for ${product.product_name}`
+      );
     }
-    if (item.quantity > product.stock_quantity) {
-      throw new Error(`Quantity of product ${product.product_name} exceeds stock`);
-    }
+
     orderItems.push({
       product_id: product.id,
       product_name: product.product_name,
       price: product.price,
-      quantity: item.quantity,
+      quantity,
     });
-    totalItems += item.quantity;
+
+    totalItems += quantity;
   }
 
   const order = await prisma.order.create({
@@ -59,12 +74,15 @@ export const createOrder = async (catalogId: string, items: { product_id: string
       catalog_id: catalogId,
       order_items: JSON.stringify(orderItems),
       total_items: totalItems,
-      whatsapp_sent: true, // as per requirement
+      whatsapp_sent: true,
     },
   });
 
   const message = await generateWhatsAppMessage(order.id);
-  const whatsappUrl = generateWhatsAppRedirectUrl(catalog.shop.shop_phone, message);
+  const whatsappUrl = generateWhatsAppRedirectUrl(
+    catalog.shop.shop_phone,
+    message
+  );
 
   return { whatsapp_url: whatsappUrl };
 };

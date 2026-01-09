@@ -7,6 +7,8 @@ import userRouter from "./user";
 import catalogRouter from "./catalog";
 import authRouter from "./auth";
 import internalRouter from "./internal";
+import orderRouter from './order';
+
 
 const router = Router();
 
@@ -17,6 +19,8 @@ router.use('/users', userRouter);
 router.use('/', catalogRouter);
 router.use('/auth', authRouter);
 router.use('/internal', internalRouter);
+router.use('/orders', orderRouter);
+
 
 
 export default router;
