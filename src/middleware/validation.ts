@@ -101,5 +101,21 @@ export const updateShopSchema = z.object({
   shop_images: z.array(z.string().url()).max(10).optional(),
 }).strict();
 
+//Catalog
+
+export const createCatalogSchema = z.object({
+  catalog_name: z.string().min(2).max(150),
+}).strict();
+
+export const updateCatalogSchema = z.object({
+  catalog_name: z.string().min(2).max(150).optional(),
+  is_active: z.boolean().optional(),
+}).strict();
+
+export const addProductsToCatalogSchema = z.object({
+  product_ids: z.array(z.string().uuid()).min(1),
+}).strict();
+
+
 
 

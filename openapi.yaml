@@ -150,6 +150,79 @@ components:
             - "https://cdn.example.com/img1.png"
             - "https://cdn.example.com/img2.png"
 
+    CreateCatalogRequest:
+      type: object
+      required: [catalog_name]
+      properties:
+        catalog_name:
+          type: string
+          minLength: 2
+          maxLength: 150
+          example: "Winter Collection 2026"
+
+    UpdateCatalogRequest:
+      type: object
+      properties:
+        catalog_name:
+          type: string
+          minLength: 2
+          maxLength: 150
+          example: "Updated Catalog Name"
+        is_active:
+          type: boolean
+          example: true
+
+    AddProductsToCatalogRequest:
+      type: object
+      required: [product_ids]
+      properties:
+        product_ids:
+          type: array
+          minItems: 1
+          items:
+            type: string
+            format: uuid
+          example:
+            - "931c77f8-c029-4042-9126-7a7ca9ecb57c"
+            - "d5b3d0c0-11f0-4c33-9b1e-2c9a68ef29f1"
+
+    CatalogSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        catalog_name:
+          type: string
+        catalog_slug:
+          type: string
+        is_active:
+          type: boolean
+        product_count:
+          type: integer
+          example: 12
+
+    PublicCatalogResponse:
+      type: object
+      properties:
+        catalog_name:
+          type: string
+        products:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                format: uuid
+              product_name:
+                type: string
+              price:
+                type: number
+              thumbnail_url:
+                type: string
+                nullable: true
+
     SuccessResponse:
       type: object
       properties:
@@ -952,3 +1025,224 @@ paths:
           description: Unauthorized
         '403':
           description: Forbidden (not admin)
+
+  /catalogs:
+    post:
+      tags: [Catalogs]
+      summary: Create catalog
+      description: Create a new catalog (admin only)
+      security:
+        - bearerAuth: []
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCatalogRequest'
+
+      responses:
+        '201':
+          description: Catalog created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                      catalog_slug:
+                        type: string
+                  message:
+                    type: string
+                    example: "Catalog created successfully"
+
+        '400':
+          description: Validation error
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+    
+    get:
+      tags: [Catalogs]
+      summary: List catalogs
+      description: List all catalogs for the logged-in shop
+      security:
+        - bearerAuth: []
+
+      responses:
+        '200':
+          description: Catalogs fetched successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CatalogSummary'
+                  message:
+                    type: string
+
+        '401':
+          description: Unauthorized
+
+  /catalogs/{id}:
+    put:
+      tags: [Catalogs]
+      summary: Update catalog
+      description: Update catalog details (admin only)
+      security:
+        - bearerAuth: []
+
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCatalogRequest'
+
+      responses:
+        '200':
+          description: Catalog updated successfully
+        '400':
+          description: Validation error
+        '403':
+          description: Forbidden
+        '404':
+          description: Catalog not found
+
+    delete:
+      tags: [Catalogs]
+      summary: Delete catalog
+      description: Soft delete catalog (admin only)
+      security:
+        - bearerAuth: []
+
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+
+      responses:
+        '200':
+          description: Catalog deleted successfully
+        '403':
+          description: Forbidden
+        '404':
+          description: Catalog not found
+
+  /catalogs/{id}/products:
+    post:
+      tags: [Catalogs]
+      summary: Add products to catalog
+      description: Add products to a catalog (admin only)
+      security:
+        - bearerAuth: []
+
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddProductsToCatalogRequest'
+
+      responses:
+        '200':
+          description: Products added successfully
+        '400':
+          description: Validation error
+        '403':
+          description: Forbidden
+        '404':
+          description: Catalog or product not found
+
+  /catalogs/{id}/products/{productId}:
+    delete:
+      tags: [Catalogs]
+      summary: Remove product from catalog
+      description: Remove a product from catalog (admin only)
+      security:
+        - bearerAuth: []
+
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: productId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+
+      responses:
+        '200':
+          description: Product removed successfully
+        '403':
+          description: Forbidden
+        '404':
+          description: Catalog or product not found
+
+  /catalog/{slug}:
+    get:
+      tags: [Catalogs]
+      summary: Get public catalog by slug
+      description: Public catalog view for sharing
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+
+      responses:
+        '200':
+          description: Catalog fetched successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/PublicCatalogResponse'
+                  message:
+                    type: string
+
+        '404':
+          description: Catalog not found

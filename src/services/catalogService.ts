@@ -40,27 +40,28 @@ export const createCatalog = async (shopId: string, userId: string, catalogName:
   return catalog;
 };
 
-export const updateCatalog = async (catalogId: string, shopId: string, data: any) => {
+export const updateCatalog = async (
+  catalogId: string,
+  shopId: string,
+  data: any
+) => {
   const catalog = await prisma.catalog.findFirst({
-    where: {
-      id: catalogId,
-      shop_id: shopId,
-    },
+    where: { id: catalogId, shop_id: shopId },
   });
 
   if (!catalog) {
-    throw new Error('Catalog not found or you do not have permission to update it');
+    throw new Error('Catalog not found or access denied');
   }
 
-  const updatedCatalog = await prisma.catalog.update({
-    where: {
-      id: catalogId,
+  return prisma.catalog.update({
+    where: { id: catalogId },
+    data: {
+      catalog_name: data.catalog_name,
+      is_active: data.is_active,
     },
-    data,
   });
-
-  return updatedCatalog;
 };
+
 
 export const deleteCatalog = async (catalogId: string, shopId: string) => {
   const catalog = await prisma.catalog.findFirst({
@@ -94,11 +95,26 @@ export const listCatalogs = async (shopId: string) => {
       catalog_name: true,
       catalog_slug: true,
       is_active: true,
+      _count: {
+        select: {
+          products: true,
+        },
+      },
+    },
+    orderBy: {
+      created_at: 'desc',
     },
   });
 
-  return catalogs;
+  return catalogs.map((catalog) => ({
+    id: catalog.id,
+    catalog_name: catalog.catalog_name,
+    catalog_slug: catalog.catalog_slug,
+    is_active: catalog.is_active,
+    product_count: catalog._count.products,
+  }));
 };
+
 
 export const addProductsToCatalog = async (catalogId: string, shopId: string, productIds: string[]) => {
     const catalog = await prisma.catalog.findFirst({
