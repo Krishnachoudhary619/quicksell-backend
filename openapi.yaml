@@ -10,6 +10,103 @@ servers:
 
 components:
   schemas:
+    ApiResponse:
+      type: object
+      required: [success, data, message]
+      properties:
+        success:
+          type: boolean
+        data:
+          nullable: true
+          type: object
+        message:
+          type: string
+    Product:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        product_name:
+          type: string
+        price:
+          type: number
+        stock_quantity:
+          type: integer
+        is_active:
+          type: boolean
+
+    CreateProductRequest:
+      type: object
+      required: [product_name, price]
+      properties:
+        sku_code:
+          type: string
+          maxLength: 50
+        product_name:
+          type: string
+          minLength: 2
+          maxLength: 150
+        description:
+          type: string
+          maxLength: 1000
+        price:
+          type: number
+          minimum: 0.01
+        currency:
+          type: string
+          example: INR
+        stock_quantity:
+          type: integer
+          minimum: 0
+        is_active:
+          type: boolean
+        thumbnail_url:
+          type: string
+          format: uri
+        image_urls:
+          type: array
+          items:
+            type: string
+            format: uri
+          maxItems: 10
+        category:
+          type: string
+          maxLength: 50
+
+    UpdateProductRequest:
+      type: object
+      properties:
+        sku_code:
+          type: string
+        product_name:
+          type: string
+        description:
+          type: string
+        price:
+          type: number
+        currency:
+          type: string
+        is_active:
+          type: boolean
+        thumbnail_url:
+          type: string
+          format: uri
+        image_urls:
+          type: array
+          items:
+            type: string
+            format: uri
+        category:
+          type: string
+
+    UpdateStockRequest:
+      type: object
+      required: [stock_quantity]
+      properties:
+        stock_quantity:
+          type: integer
+          minimum: 0
     SuccessResponse:
       type: object
       properties:
@@ -348,11 +445,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /product:
+
+  /products:
     post:
-      summary: Create a new product
-      tags:
-        - Product
+      tags: [Products]
+      summary: Create product
+      operationId: createProduct
       security:
         - bearerAuth: []
       requestBody:
@@ -360,58 +458,117 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                name:
-                  type: string
-                description:
-                  type: string
-                price:
-                  type: number
-                category:
-                  type: string
-              required:
-                - name
-                - price
-                - category
+              $ref: '#/components/schemas/CreateProductRequest'
       responses:
         '201':
-          description: Product created successfully
+          description: Product created
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SuccessResponse'
+                $ref: '#/components/schemas/ApiResponse'
         '400':
-          description: Invalid input
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-    get:
-      summary: Get all products for the authenticated user's shop
-      tags:
-        - Product
-      security:
-        - bearerAuth: []
-      responses:
-        '200':
-          description: A list of products
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SuccessResponse'
+          description: Validation error
         '401':
           description: Unauthorized
+        '500':
+          description: Server error
+
+    get:
+      tags: [Products]
+      summary: List products
+      operationId: listProducts
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: category
+          in: query
+          schema:
+            type: string
+        - name: active
+          in: query
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: Products fetched
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Product'
+        '401':
+          description: Unauthorized
+        '500':
+          description: Server error
 
-  /product/{id}:
+  /products/{id}:
+    
+    get:
+      tags: [Products]
+      summary: Get product by ID
+      operationId: getProductById
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Product fetched successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          id:
+                            type: string
+                            format: uuid
+                          product_name:
+                            type: string
+                          description:
+                            type: string
+                          price:
+                            type: number
+                          currency:
+                            type: string
+                          stock_quantity:
+                            type: integer
+                          is_active:
+                            type: boolean
+                          thumbnail_url:
+                            type: string
+                          image_urls:
+                            type: array
+                            items:
+                              type: string
+                          category:
+                            type: string
+        '401':
+          description: Unauthorized
+        '404':
+          description: Product not found
+        '500':
+          description: Server error
+
     put:
-      summary: Update a product by ID
-      tags:
-        - Product
+      tags: [Products]
+      summary: Update product
+      operationId: updateProduct
       security:
         - bearerAuth: []
       parameters:
@@ -426,67 +583,53 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                name:
-                  type: string
-                description:
-                  type: string
-                price:
-                  type: number
-                category:
-                  type: string
+              $ref: '#/components/schemas/UpdateProductRequest'
       responses:
         '200':
-          description: Product updated successfully
+          description: Product updated
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SuccessResponse'
-        '400':
-          description: Invalid input
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: '#/components/schemas/ApiResponse'
         '404':
           description: Product not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-    delete:
-      summary: Delete a product by ID
-      tags:
-        - Product
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        '200':
-          description: Product deleted successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SuccessResponse'
-        '404':
-          description: Product not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+        '500':
+          description: Server error
 
-  /product/{id}/stock:
+    delete:
+      tags: [Products]
+      summary: Delete product (soft delete)
+      operationId: deleteProduct
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Product deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '404':
+          description: Product not found
+        '401':
+          description: Unauthorized
+        '500':
+          description: Server error
+
+  /products/{id}/stock:
     patch:
-      summary: Update a product's stock
-      tags:
-        - Product
+      tags: [Products]
+      summary: Update product stock
+      operationId: updateProductStock
       security:
         - bearerAuth: []
       parameters:
@@ -501,28 +644,65 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                quantity:
-                  type: integer
-              required:
-                - quantity
+              $ref: '#/components/schemas/UpdateStockRequest'
       responses:
         '200':
-          description: Stock updated successfully
+          description: Stock updated
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SuccessResponse'
-        '400':
-          description: Invalid input
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: '#/components/schemas/ApiResponse'
         '404':
           description: Product not found
+        '401':
+          description: Unauthorized
+        '500':
+          description: Server error
+  
+  /products/search:
+    get:
+      tags: [Products]
+      summary: Search products
+      operationId: searchProducts
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: q
+          in: query
+          description: Search by product name, SKU, or category
+          schema:
+            type: string
+        - name: category
+          in: query
+          schema:
+            type: string
+        - name: min_price
+          in: query
+          schema:
+            type: number
+        - name: max_price
+          in: query
+          schema:
+            type: number
+        - name: active
+          in: query
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: Products fetched
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Product'
+        '401':
+          description: Unauthorized
+        '500':
+          description: Server error
