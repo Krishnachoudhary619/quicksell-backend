@@ -77,3 +77,29 @@ export const searchProductQuerySchema = z.object({
   active: z.enum(['true', 'false']).optional(),
 });
 
+//Shop Validation
+
+export const createStaffSchema = z.object({
+  name: z.string().min(2).max(100),
+  phone: z.string().regex(/^[1-9][0-9]{9}$/, 'Invalid phone number'),
+}).strict();
+
+export const updateStaffStatusSchema = z.object({
+  is_active: z.boolean(),
+}).strict();
+
+export const updateMyProfileSchema = z.object({
+  name: z.string().min(2).max(100),
+}).strict();
+
+export const updateShopSchema = z.object({
+  shop_name: z.string().min(2).max(150).optional(),
+  shop_phone: z.string().regex(/^[1-9][0-9]{9}$/).optional(),
+  shop_email: z.string().email().optional(),
+  shop_address: z.string().max(500).optional(),
+  shop_logo_url: z.string().url().optional(),
+  shop_images: z.array(z.string().url()).max(10).optional(),
+}).strict();
+
+
+
