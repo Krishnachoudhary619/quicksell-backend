@@ -7,6 +7,8 @@ info:
 servers:
   - url: https://3000-firebase-quick-share-backend-1767762112097.cluster-a6zx3cwnb5hnuwbgyxmofxpkfe.cloudworkstations.dev
     description: Local
+  - url: https://quicksell-backend.onrender.com
+    description: Production
 
 components:
   schemas:
