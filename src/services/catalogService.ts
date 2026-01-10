@@ -1,8 +1,7 @@
 
-import { PrismaClient } from '@prisma/client';
-import slugify from 'slugify';
+import { prisma } from '../lib/prisma';
 
-const prisma = new PrismaClient();
+import slugify from 'slugify';
 
 const generateUniqueSlug = async (name: string) => {
   let slug = slugify(name, { lower: true, strict: true });

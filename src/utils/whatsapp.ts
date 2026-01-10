@@ -1,7 +1,5 @@
+import { prisma } from '../lib/prisma';
 
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
 
 export const generateWhatsAppMessage = async (orderId: string): Promise<string> => {
     try {

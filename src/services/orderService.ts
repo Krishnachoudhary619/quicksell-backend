@@ -1,8 +1,9 @@
 
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '../lib/prisma';
+
 import { generateWhatsAppMessage, generateWhatsAppRedirectUrl } from '../utils/whatsapp';
 
-const prisma = new PrismaClient();
+
 
 export const createOrder = async (
   catalogId: string,

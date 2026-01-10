@@ -1,9 +1,8 @@
+import { Request, Response } from "express";
 
-import { Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
-import { sendSuccess, sendError } from '../utils/response';
+import { prisma } from "../lib/prisma";
 
-const prisma = new PrismaClient();
+import { sendSuccess, sendError } from "../utils/response";
 
 export const onboardShopOwner = async (req: Request, res: Response) => {
   const { owner_name, owner_phone, shop_name, shop_phone } = req.body;
@@ -17,7 +16,7 @@ export const onboardShopOwner = async (req: Request, res: Response) => {
     });
 
     if (existingUser) {
-      return sendError(res, 'User with this phone number already exists', 400);
+      return sendError(res, "User with this phone number already exists", 400);
     }
 
     const existingShop = await prisma.shop.findFirst({
@@ -25,7 +24,7 @@ export const onboardShopOwner = async (req: Request, res: Response) => {
     });
 
     if (existingShop) {
-      return sendError(res, 'Shop with this phone number already exists', 400);
+      return sendError(res, "Shop with this phone number already exists", 400);
     }
 
     const result = await prisma.$transaction(async (prisma) => {
@@ -40,7 +39,7 @@ export const onboardShopOwner = async (req: Request, res: Response) => {
         data: {
           name: owner_name,
           phone: owner_phone,
-          role: 'OWNER',
+          role: "OWNER",
           shop_id: shop.id,
         },
       });
@@ -48,22 +47,26 @@ export const onboardShopOwner = async (req: Request, res: Response) => {
       return { shop, owner };
     });
 
-    sendSuccess(res, {
-      shop: {
-        id: result.shop.id,
-        name: result.shop.shop_name,
-        phone: result.shop.shop_phone,
+    sendSuccess(
+      res,
+      {
+        shop: {
+          id: result.shop.id,
+          name: result.shop.shop_name,
+          phone: result.shop.shop_phone,
+        },
+        owner: {
+          id: result.owner.id,
+          name: result.owner.name,
+          phone: result.owner.phone,
+          role: result.owner.role,
+        },
       },
-      owner: {
-        id: result.owner.id,
-        name: result.owner.name,
-        phone: result.owner.phone,
-        role: result.owner.role,
-      },
-    }, 'Shop owner onboarded successfully', 201);
-
+      "Shop owner onboarded successfully",
+      201
+    );
   } catch (error) {
     console.error(error);
-    sendError(res, 'Failed to onboard shop owner', 500);
+    sendError(res, "Failed to onboard shop owner", 500);
   }
 };

@@ -1,9 +1,9 @@
 
-import { PrismaClient } from '@prisma/client';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
+import { prisma } from '../lib/prisma';
 
-const prisma = new PrismaClient();
+
 
 const generateOtp = () => {
   return Math.floor(100000 + Math.random() * 900000).toString();
