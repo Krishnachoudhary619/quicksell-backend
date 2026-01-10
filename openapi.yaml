@@ -1420,3 +1420,57 @@ paths:
           description: Unauthorized
         '404':
           description: Order not found
+
+  /uploads/presigned-urls:
+    post:
+      tags: [Uploads]
+      summary: Generate S3 presigned URLs for multiple image uploads
+      description: |
+        Generates presigned URLs for uploading multiple images directly to S3.
+        Frontend must upload files directly to S3 using returned upload_url.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                files:
+                  type: array
+                  minItems: 1
+                  items:
+                    type: object
+                    properties:
+                      file_name:
+                        type: string
+                        example: image1.jpg
+                      file_type:
+                        type: string
+                        example: image/jpeg
+      responses:
+        '200':
+          description: Presigned URLs generated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        upload_url:
+                          type: string
+                          example: https://s3.amazonaws.com/...
+                        file_url:
+                          type: string
+                          example: https://bucket.s3.region.amazonaws.com/uploads/uuid
+                  message:
+                    type: string
+                    example: Presigned URLs generated

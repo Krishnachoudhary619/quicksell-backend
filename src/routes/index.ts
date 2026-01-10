@@ -21,6 +21,9 @@ router.use('/auth', authRouter);
 router.use('/internal', internalRouter);
 router.use('/orders', orderRouter);
 
+// router.use('/uploads', uploadRouter);
+
+
 
 
 export default router;
