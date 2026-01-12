@@ -48,5 +48,12 @@ router.delete(
   auth,
   catalogController.removeProductFromCatalog
 );
+// 🔐 Admin / Staff – get all products in a catalog
+router.get(
+  '/catalogs/:id/products',
+  auth,
+  catalogController.getCatalogProductsForAdmin
+);
+
 
 export default router;

@@ -106,3 +106,28 @@ export const getCatalogBySlug = async (req: AuthRequest, res: Response) => {
     sendError(res, (error as Error).message, 404);
   }
 };
+
+export const getCatalogProductsForAdmin = async (
+  req: AuthRequest,
+  res: Response
+) => {
+  try {
+    if (
+      req.user?.role !== 'ADMIN' &&
+      req.user?.role !== 'OWNER' &&
+      req.user?.role !== 'STAFF'
+    ) {
+      return sendError(res, 'Unauthorized', 403);
+    }
+
+    const catalog = await catalogService.getCatalogProductsForAdmin(
+      req.params.id,
+      req.user.shopId
+    );
+
+    sendSuccess(res, catalog, 'Catalog products fetched successfully');
+  } catch (error) {
+    sendError(res, (error as Error).message, 404);
+  }
+};
+

@@ -233,3 +233,44 @@ export const getCatalogBySlug = async (slug: string) => {
     products: catalog.products.map((p) => p.product),
   };
 };
+
+export const getCatalogProductsForAdmin = async (
+  catalogId: string,
+  shopId: string
+) => {
+  const catalog = await prisma.catalog.findFirst({
+    where: {
+      id: catalogId,
+      shop_id: shopId,
+    },
+    select: {
+      catalog_name: true,
+      products: {
+        orderBy: {
+          display_order: 'asc',
+        },
+        select: {
+          product: {
+            select: {
+              id: true,
+              product_name: true,
+              price: true,
+              thumbnail_url: true,
+              is_active: true,
+              stock_quantity: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
+  if (!catalog) {
+    throw new Error('Catalog not found or access denied');
+  }
+
+  return {
+    catalog_name: catalog.catalog_name,
+    products: catalog.products.map((p) => p.product),
+  };
+};
