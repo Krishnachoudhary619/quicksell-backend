@@ -293,6 +293,51 @@ components:
               thumbnail_url:
                 type: string
                 nullable: true
+    
+    PresignedUrlRequest:
+      type: object
+      required:
+        - files
+      properties:
+        files:
+          type: array
+          minItems: 1
+          maxItems: 10
+          description: A list of files for which to generate presigned URLs.
+          items:
+            type: object
+            required:
+              - file_name
+              - file_type
+            properties:
+              file_name:
+                type: string
+                description: 'The name of the file (e.g., "profile-picture.jpg").'
+                example: "image1.jpg"
+              file_type:
+                type: string
+                description: 'The MIME type of the file (e.g., "image/jpeg").'
+                example: "image/jpeg"
+      example:
+        files:
+          - file_name: "my-awesome-photo.jpg"
+            file_type: "image/jpeg"
+          - file_name: "product-video.mp4"
+            file_type: "video/mp4"
+
+    PresignedUrlResponse:
+      type: object
+      properties:
+        upload_url:
+          type: string
+          format: uri
+          description: The presigned URL to be used for uploading the file via a PUT request. This URL is short-lived.
+          example: "https://my-bucket.s3.my-region.amazonaws.com/uploads/guid.jpg?AWSAccessKeyId=..."
+        file_url:
+          type: string
+          format: uri
+          description: The final, public URL of the file after it has been uploaded.
+          example: "https://my-bucket.s3.my-region.amazonaws.com/uploads/guid.jpg"
 
     SuccessResponse:
       type: object
@@ -328,6 +373,8 @@ tags:
     description: User & staff management
   - name: Orders
     description: Order placement and management
+  - name: Uploads
+    description: File upload endpoints
 
 paths:
   /auth/send-otp:
@@ -1493,8 +1540,10 @@ paths:
       tags: [Uploads]
       summary: Generate S3 presigned URLs for multiple image uploads
       description: |
-        Generates presigned URLs for uploading multiple images directly to S3.
-        Frontend must upload files directly to S3 using returned upload_url.
+        Generates one or more S3 presigned URLs for clients to upload files directly to S3.
+        To use this endpoint, provide an array of file objects, each specifying a `file_name` and `file_type`.
+        The response will contain an `upload_url` (the presigned URL for the PUT request) and a `file_url` (the final URL of the file after upload).
+        The client should then perform a PUT request with the file's binary data to the `upload_url`.
       security:
         - bearerAuth: []
       requestBody:
@@ -1502,42 +1551,21 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                files:
-                  type: array
-                  minItems: 1
-                  items:
-                    type: object
-                    properties:
-                      file_name:
-                        type: string
-                        example: image1.jpg
-                      file_type:
-                        type: string
-                        example: image/jpeg
+              $ref: '#/components/schemas/PresignedUrlRequest'
       responses:
         '200':
           description: Presigned URLs generated successfully
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  data:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        upload_url:
-                          type: string
-                          example: https://s3.amazonaws.com/...
-                        file_url:
-                          type: string
-                          example: https://bucket.s3.region.amazonaws.com/uploads/uuid
-                  message:
-                    type: string
-                    example: Presigned URLs generated
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/PresignedUrlResponse'
+                      message:
+                        type: string
+                        example: 'Presigned URLs generated successfully'

@@ -40,7 +40,7 @@ export const getOrder = async (req: AuthRequest, res: Response) => {
     }
 
     const order = await orderService.getOrderById(
-      req.params.id,
+      req.params.id as string,
       shopId
     );
 

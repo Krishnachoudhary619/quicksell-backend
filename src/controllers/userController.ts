@@ -42,7 +42,7 @@ export const updateStaffStatus = async (req: AuthRequest, res: Response) => {
     const requesterId = req.user.userId;
 
     await userService.updateStaffStatus(
-      req.params.id,
+      req.params.id as string,
       shopId,
       requesterId,
       req.body.is_active

@@ -8,6 +8,7 @@ import catalogRouter from "./catalog";
 import authRouter from "./auth";
 import internalRouter from "./internal";
 import orderRouter from './order';
+import uploadRouter from './upload';
 
 
 const router = Router();
@@ -20,8 +21,7 @@ router.use('/', catalogRouter);
 router.use('/auth', authRouter);
 router.use('/internal', internalRouter);
 router.use('/orders', orderRouter);
-
-// router.use('/uploads', uploadRouter);
+router.use('/uploads', uploadRouter);
 
 
 

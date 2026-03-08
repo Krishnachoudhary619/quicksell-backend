@@ -24,7 +24,7 @@ export const updateProduct = async (req: AuthRequest, res: Response) => {
       return sendError(res, 'Shop ID not found in token', 400);
     }
 
-    await productService.updateProduct(req.params.id, shopId, req.body);
+    await productService.updateProduct(req.params.id as string, shopId, req.body);
     sendSuccess(res, {}, 'Product updated successfully');
   } catch (error) {
     const msg = (error as Error).message;
@@ -39,7 +39,7 @@ export const deleteProduct = async (req: AuthRequest, res: Response) => {
       return sendError(res, 'Shop ID not found in token', 400);
     }
 
-    await productService.deleteProduct(req.params.id, shopId);
+    await productService.deleteProduct(req.params.id as string, shopId);
     sendSuccess(res, {}, 'Product deleted successfully');
   } catch (error) {
     const msg = (error as Error).message;
@@ -69,7 +69,7 @@ export const updateStock = async (req: AuthRequest, res: Response) => {
     }
 
     await productService.updateStock(
-      req.params.id,
+      req.params.id as string,
       shopId,
       req.body.stock_quantity
     );
@@ -90,7 +90,7 @@ export const getProductById = async (req: AuthRequest, res: Response) => {
 
     const { id } = req.params;
 
-    const product = await productService.getProductById(id, shopId);
+    const product = await productService.getProductById(id as string, shopId);
 
     sendSuccess(res, product, 'Product fetched successfully');
   } catch (error) {

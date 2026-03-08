@@ -33,7 +33,7 @@ export const updateCatalog = async (req: AuthRequest, res: Response) => {
     }
 
     await catalogService.updateCatalog(
-      req.params.id,
+      req.params.id as string,
       req.user.shopId,
       req.body
     );
@@ -51,7 +51,7 @@ export const deleteCatalog = async (req: AuthRequest, res: Response) => {
     }
 
     await catalogService.deleteCatalog(
-      req.params.id,
+      req.params.id as string,
       req.user.shopId
     );
 
@@ -73,7 +73,7 @@ export const listCatalogs = async (req: AuthRequest, res: Response) => {
 export const addProductsToCatalog = async (req: AuthRequest, res: Response) => {
   try {
     await catalogService.addProductsToCatalog(
-      req.params.id,
+      req.params.id as string,
       req.user.shopId,
       req.body.product_ids
     );
@@ -87,9 +87,9 @@ export const addProductsToCatalog = async (req: AuthRequest, res: Response) => {
 export const removeProductFromCatalog = async (req: AuthRequest, res: Response) => {
   try {
     await catalogService.removeProductFromCatalog(
-      req.params.id,
+      req.params.id as string,
       req.user.shopId,
-      req.params.productId
+      req.params.productId as string
     );
 
     sendSuccess(res, {}, 'Product removed from catalog successfully');
@@ -100,7 +100,7 @@ export const removeProductFromCatalog = async (req: AuthRequest, res: Response) 
 
 export const getCatalogBySlug = async (req: AuthRequest, res: Response) => {
   try {
-    const catalog = await catalogService.getCatalogBySlug(req.params.slug);
+    const catalog = await catalogService.getCatalogBySlug(req.params.slug as string);
     sendSuccess(res, catalog, 'Catalog fetched successfully');
   } catch (error) {
     sendError(res, (error as Error).message, 404);
@@ -121,7 +121,7 @@ export const getCatalogProductsForAdmin = async (
     }
 
     const catalog = await catalogService.getCatalogProductsForAdmin(
-      req.params.id,
+      req.params.id as string,
       req.user.shopId
     );
 
