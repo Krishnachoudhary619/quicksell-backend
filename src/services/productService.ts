@@ -1,4 +1,5 @@
 import { prisma } from '../lib/prisma';
+import { deleteFileFromS3 } from '../utils/s3Delete';
 
 export const createProduct = async (shopId: string, data: any) => {
   return prisma.product.create({
@@ -30,7 +31,16 @@ export const updateProduct = async (
   });
 
   if (!product) {
-    throw new Error('Product not found or access denied');
+    throw new Error("Product not found or access denied");
+  }
+
+  // If thumbnail changed, delete old one
+  if (
+    data.thumbnail_url &&
+    product.thumbnail_url &&
+    data.thumbnail_url !== product.thumbnail_url
+  ) {
+    await deleteFileFromS3(product.thumbnail_url);
   }
 
   return prisma.product.update({
@@ -57,7 +67,21 @@ export const deleteProduct = async (productId: string, shopId: string) => {
   });
 
   if (!product) {
-    throw new Error('Product not found or access denied');
+    throw new Error("Product not found or access denied");
+  }
+
+  // delete thumbnail
+  if (product.thumbnail_url) {
+    await deleteFileFromS3(product.thumbnail_url);
+  }
+
+  // delete gallery images
+  if (product.image_urls) {
+    const images = JSON.parse(product.image_urls);
+
+    for (const img of images) {
+      await deleteFileFromS3(img);
+    }
   }
 
   await prisma.product.update({

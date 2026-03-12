@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { v4 as uuid } from 'uuid';
 import { sendSuccess, sendError } from '../utils/response';
 import { getPresignedUploadUrl } from '../services/s3service';
+import { deleteFileFromS3 } from '../utils/s3Delete';
 
 export const getPresignedUploadUrls = async (req: Request, res: Response) => {
   try {
@@ -30,6 +31,23 @@ export const getPresignedUploadUrls = async (req: Request, res: Response) => {
     );
 
     sendSuccess(res, uploads, 'Presigned URLs generated');
+  } catch (error) {
+    sendError(res, (error as Error).message, 500);
+  }
+};
+
+
+export const deleteFile = async (req: Request, res: Response) => {
+  try {
+    const { file_url } = req.body;
+
+    if (!file_url) {
+      return sendError(res, "file_url is required", 400);
+    }
+
+    await deleteFileFromS3(file_url);
+
+    sendSuccess(res, {}, "File deleted successfully");
   } catch (error) {
     sendError(res, (error as Error).message, 500);
   }
